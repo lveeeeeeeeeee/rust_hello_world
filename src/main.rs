@@ -56,7 +56,7 @@ fn input_number() -> Result<i32, ParseIntError> {
 
     io::stdin()
         .read_line(&mut number)
-        .expect("eror NUMBER should be in range of signed 32 bit numbers");
+        .expect("system eror");
 
     let result: Result<i32, ParseIntError> = number.trim().parse::<i32>();
 
