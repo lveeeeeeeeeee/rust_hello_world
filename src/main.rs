@@ -1,30 +1,40 @@
 // TODO
-// - interval of guess is fixed. change it to be user-generated.
-// - number of tries is fixed. change it to be log2(elements_to_guess_from) + 1.
+// - interval of guess is fixed. change it to be user-generated. DONE
+// - number of tries is fixed. change it to be log2(elements_to_guess_from) + 1. DONE
+// - program panics. explode the computer instead.
 
 use rand::Rng;
+use rand::rngs::ThreadRng;
 use std::cmp::Ordering;
 use std::{io, num::ParseIntError};
+use std::ops::RangeInclusive;
 
 fn main() {
     println!("Guessing game.");
+
+    const ERROR_MSG: &str = "32 bits number put fam";
+
+    println!("enter lowest bound of interval of i32 numbers to guess from.");
+    let start = input_number().expect(&ERROR_MSG);
+
+    println!("enter highest bound of interval of i32 numbers to guess from.");
+    let end = input_number().expect(&ERROR_MSG);
+
+    let secret_num: i32 = generate_rnd_num(&start, &end);    
+    let mut tries: u32 = calculate_tries(&start, &end) + 1;
+
     println!(
-        "be grateful. youve been given a leeway of 12 moves.
-    \nif you lose you get segfaulted (joke)"
+        "be grateful. youve been given a leeway of {tries} moves.
+        if you lose you get segfaulted (joke)\n"
     );
-
-    let error_msg: &str = "32 bits number put fam";
-    let secret_num: i32 = generate_rnd_num();
-
-    let mut tries: u8 = 12;
 
     // While there are still tries, take a number and compare it to a secret one.
     while tries != 0 {
-        println!("Enter the number from -1000 to 1000.");
+        println!("Enter the number from {start} to {end}.");
 
         // Get the user number.
-        let guess: i32 = input_number().expect(&error_msg);
-        tries -= 1u8;
+        let guess: i32 = input_number().expect(&ERROR_MSG);
+        tries -= 1u32;
 
         // Compare the secret number and the guessed number
         let correct_guess: bool = compare_secret_to_guess(&secret_num, &guess);
@@ -61,8 +71,37 @@ fn compare_secret_to_guess(secret: &i32, guess: &i32) -> bool {
 }
 
 /// Generate random number to guess.
-fn generate_rnd_num() -> i32 {
-    rand::thread_rng().gen_range(-1000..=1000)
+fn generate_rnd_num(start: &i32, end: &i32) -> i32 {
+     
+    // Create a range struct
+    let random_range: RangeInclusive<i32> = RangeInclusive::new(*start, *end);
+    let mut rng: ThreadRng = rand::thread_rng();
+
+    return rng.gen_range(random_range);
+}
+
+
+// ceil(log2(6)) = 3
+fn calculate_tries(start: &i32, end: &i32) -> u32 {
+    const ERROR_MSG_MISMATCH: &str = "";
+    loop {
+        let len: i32 = *end - *start;
+        
+        if len <= 1 {
+            println!("the range was inputted wrong: 1st argument should be less than second by more than 1");
+        }
+        
+        else {
+            let tries: u32 = len.wrapping_abs() as u32;
+            return u32::BITS - tries.leading_zeros();
+        }
+
+        println!("enter lowest bound of interval of i32 numbers to guess from.");
+        let start: i32 = input_number().expect(&ERROR_MSG_MISMATCH);
+
+        println!("enter highest bound of interval of i32 numbers to guess from.");
+        let end: i32 = input_number().expect(&ERROR_MSG_MISMATCH);
+    }
 }
 
 /// Input number
